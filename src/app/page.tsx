@@ -1,65 +1,121 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { UploadZone } from "@/components/upload-zone";
+import { CorrectionEditor } from "@/components/correction-editor";
+import { ParsedQuestion } from "@/lib/gemini";
+import { Dashboard } from "@/components/dashboard";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
+  const [step, setStep] = useState<"upload" | "review">("upload");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [parsedData, setParsedData] = useState<ParsedQuestion | null>(null);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const { t, language } = useLanguage();
+
+  const handleAnalyze = async (base64Image: string) => {
+    setAnalyzing(true);
+    setCurrentImage(base64Image);
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: base64Image,
+          language: language
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("API Error Response:", res.status, errorText);
+        throw new Error(`Analysis failed: ${res.status} ${errorText}`);
+      }
+
+      const data = await res.json();
+      setParsedData(data);
+      setStep("review");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to analyze image");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleSave = async (finalData: ParsedQuestion) => {
+    try {
+      const res = await fetch("/api/error-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...finalData,
+          originalImageUrl: "placeholder-url", // TODO: Implement real upload
+        }),
+      });
+
+      if (res.ok) {
+        setStep("upload");
+        setParsedData(null);
+        setCurrentImage(null);
+        alert("Saved successfully!");
+      } else {
+        alert("Failed to save");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error saving");
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen p-8 bg-background relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight text-primary">
+            {t.app.title}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-muted-foreground">
+            {t.app.subtitle}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Dashboard Section */}
+        <Dashboard />
+
+        <div className="flex justify-center gap-4">
+          <Button
+            variant={step === "upload" ? "default" : "outline"}
+            onClick={() => setStep("upload")}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {t.app.uploadNew}
+          </Button>
+          <Link href="/notebook">
+            <Button variant="outline">{t.app.viewNotebook}</Button>
+          </Link>
         </div>
-      </main>
-    </div>
+
+        {step === "upload" && (
+          <UploadZone onAnalyze={handleAnalyze} isAnalyzing={analyzing} />
+        )}
+
+        {step === "review" && parsedData && (
+          <CorrectionEditor
+            initialData={parsedData}
+            onSave={handleSave}
+            onCancel={() => setStep("upload")}
+            imagePreview={currentImage}
+          />
+        )}
+      </div>
+    </main>
   );
 }
