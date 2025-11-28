@@ -43,8 +43,8 @@ export class OpenAIProvider implements AIService {
         } catch (error) {
             try {
                 const fixedJson = jsonString
-                    .replace(/\\([a-zA-Z]+)/g, '\\\\$1')
-                    .replace(/\\\\\\\\/g, '\\\\');
+                    // Fix: Only escape backslashes that are NOT followed by valid JSON escape characters (n, r, t, b, f, u, ", \)
+                    .replace(/\\(?![nrtbfu"\\/])/g, '\\\\');
                 return JSON.parse(fixedJson) as ParsedQuestion;
             } catch (secondError) {
                 console.error("JSON parse failed:", secondError);

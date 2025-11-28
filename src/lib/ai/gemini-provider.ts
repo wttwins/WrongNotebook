@@ -37,8 +37,9 @@ export class GeminiProvider implements AIService {
             // Try heuristic fix for LaTeX escaping
             try {
                 const fixedJson = jsonString
-                    .replace(/\\([a-zA-Z]+)/g, '\\\\$1')
-                    .replace(/\\\\\\\\/g, '\\\\');
+                    // Fix: Only escape backslashes that are NOT followed by valid JSON escape characters (n, r, t, b, f, u, ", \)
+                    .replace(/\\(?![nrtbfu"\\/])/g, '\\\\')
+                // The previous logic was too aggressive: .replace(/\\([a-zA-Z]+)/g, '\\\\$1')
                 return JSON.parse(fixedJson) as ParsedQuestion;
             } catch (secondError) {
                 console.error("JSON parse failed:", secondError);

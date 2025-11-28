@@ -21,6 +21,11 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         .replace(/([.!?;])\s*\n(?!\n)/g, '$1\n\n')   // English punctuation followed by single newline
         .replace(/(\d+\))\s*\n(?!\n)/g, '$1\n\n')    // Numbered items like (1), (2)
         .replace(/([\u2460-\u2473])\s*\n(?!\n)/g, '$1\n\n')  // Circled numbers ①②③
+        // Fix: Remove indentation for lines starting with circled numbers or (n) to prevent code block rendering
+        .replace(/\n\s+([\u2460-\u2473])/g, '\n$1')
+        .replace(/\n\s+(\d+\))/g, '\n$1')
+        // Fix: Replace literal \n sequences with actual newlines
+        .replace(/\\n/g, '\n')
         // Restore preserved double line breaks
         .replace(/\n\n__PRESERVE__\n\n/g, '\n\n');
 
