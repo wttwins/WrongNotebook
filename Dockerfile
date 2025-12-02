@@ -19,8 +19,12 @@ COPY . .
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
-# Generate Prisma Client
+# Generate Prisma Client and Seed Database
+# We temporarily set DATABASE_URL to a local file for the build process to generate the file
+ENV DATABASE_URL="file:/app/prisma/dev.db"
 RUN npx prisma generate
+# Run migration to create the dev.db file
+RUN npx prisma migrate deploy
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
@@ -55,8 +59,15 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Copy config directory for runtime
 COPY --from=builder --chown=nextjs:nodejs /app/config ./config
 
+# Create data directory for SQLite persistence
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
+
+# Copy entrypoint script
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Ensure the nextjs user owns the application directory
-RUN chown -R nextjs:nodejs /app
+# RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
@@ -67,8 +78,10 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Environment variables 
-ENV DATABASE_URL="file:/app/prisma/dev.db"
+# Point to the persistent data location
+ENV DATABASE_URL="file:/app/data/dev.db"
 ENV AUTH_TRUST_HOST=true
 
-# Start the application
+# Use entrypoint script to handle DB initialization
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]

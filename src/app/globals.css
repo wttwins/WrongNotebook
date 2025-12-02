@@ -115,7 +115,53 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Print Styles for PDF Export */
+@media print {
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Hide elements that shouldn't be printed */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Prevent page breaks inside elements */
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure images fit within page */
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Optimize text rendering */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+  }
+
+  /* Remove backgrounds for better printing */
+  .bg-muted {
+    background-color: #f5f5f5 !important;
   }
 }

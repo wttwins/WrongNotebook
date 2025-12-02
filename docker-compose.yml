@@ -16,6 +16,6 @@ services:
       - NEXTAUTH_SECRET=your_secret_key
     volumes:
       # Persist the SQLite database
-      - ./prisma:/app/prisma
+      - ./data:/app/data
       - ./config:/app/config
 

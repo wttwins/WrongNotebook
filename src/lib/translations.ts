@@ -72,6 +72,7 @@ export const translations = {
             mastered: "Mastered",
             review: "Review",
             added: "Added",
+            exportPrint: "Export for Print",
         },
         notebooks: {
             title: "My Notebooks",
@@ -342,6 +343,7 @@ export const translations = {
             mastered: "已掌握",
             review: "待复习",
             added: "添加于",
+            exportPrint: "导出打印",
         },
         notebooks: {
             title: "我的错题本",

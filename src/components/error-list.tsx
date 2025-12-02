@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, CheckCircle, Clock, ChevronDown } from "lucide-react";
+import { Search, Filter, CheckCircle, Clock, ChevronDown, Printer } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -45,6 +46,26 @@ export function ErrorList({ subjectId }: ErrorListProps = {}) {
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
     const { t } = useLanguage();
+    const router = useRouter();
+
+    const handleExportPrint = () => {
+        const params = new URLSearchParams();
+        if (subjectId) params.append("subjectId", subjectId);
+        if (search) params.append("query", search);
+        if (masteryFilter !== "all") {
+            params.append("mastery", masteryFilter === "mastered" ? "1" : "0");
+        }
+        if (timeFilter !== "all") {
+            params.append("timeRange", timeFilter);
+        }
+        if (selectedTag) {
+            params.append("tag", selectedTag);
+        }
+        if (gradeFilter) params.append("gradeSemester", gradeFilter);
+        if (paperLevelFilter !== "all") params.append("paperLevel", paperLevelFilter);
+
+        router.push(`/print-preview?${params.toString()}`);
+    };
 
     const handleTagClick = (tag: string) => {
         setSelectedTag(selectedTag === tag ? null : tag);
@@ -144,6 +165,10 @@ export function ErrorList({ subjectId }: ErrorListProps = {}) {
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
+                <Button variant="outline" onClick={handleExportPrint}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    {t.notebook?.exportPrint || "导出打印"}
+                </Button>
             </div>
 
             {/* Advanced Filters Row */}
