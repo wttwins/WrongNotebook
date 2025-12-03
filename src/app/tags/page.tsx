@@ -26,7 +26,10 @@ export default function TagsPage() {
     // 自定义标签状态
     const [customTags, setCustomTags] = useState<CustomTagsData>({ math: [], physics: [], chemistry: [], english: [], other: [] });
     const [newTagSubject, setNewTagSubject] = useState<keyof CustomTagsData>("math");
-    const [newTagCategory, setNewTagCategory] = useState("default");
+    const [newTagCategory, setNewTagCategory] = useState(() => {
+        const mathCats = Object.keys(MATH_CURRICULUM);
+        return mathCats.length > 0 ? mathCats[0] : "default";
+    });
     const [newTagName, setNewTagName] = useState("");
     const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 

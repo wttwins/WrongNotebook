@@ -12,6 +12,7 @@ export const translations = {
             confirm: "Confirm",
             back: "Back",
             delete: "Delete",
+            default: "Default",
         },
         app: {
             title: "Smart Error Notebook",
@@ -283,6 +284,7 @@ export const translations = {
             confirm: "确认",
             back: "返回",
             delete: "删除",
+            default: "默认",
         },
         app: {
             title: "智能错题本",
