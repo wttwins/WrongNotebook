@@ -1,0 +1,2 @@
+# 此文件用于确保 config 目录被 Git 跟踪
+# 实际的配置文件 app-config.json 已在 .gitignore 中被忽略
